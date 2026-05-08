@@ -3,297 +3,353 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@Furqs7 AI Content Engine - Production</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <title>@Furqs7 Content Engine</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0A0A0A; color: #ffffff; line-height: 1.6; }
-    .app { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-    .header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 2px solid #FF6B35; }
-    .header h1 { font-size: 2.5rem; font-weight: 900; background: linear-gradient(135deg, #FF6B35, #00D9FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; letter-spacing: -1px; }
-    .header p { color: #888; font-size: 1rem; }
-    .api-setup { background: rgba(255, 107, 53, 0.08); border: 2px solid #FF6B35; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-    .api-setup h3 { color: #FF6B35; margin-bottom: 1rem; font-size: 1.125rem; }
-    .api-setup input { width: 100%; padding: 0.75rem; background: #1A1A1A; border: 1px solid #FF6B35; border-radius: 8px; color: white; font-family: 'Courier New', monospace; font-size: 0.875rem; margin-bottom: 0.5rem; }
-    .api-setup small { color: #888; font-size: 0.8rem; display: block; }
-    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: rgba(255, 107, 53, 0.05); border: 1px solid rgba(255, 107, 53, 0.2); border-radius: 12px; }
-    .btn { padding: 0.875rem 1.5rem; font-size: 0.95rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; }
-    .btn-primary { background: linear-gradient(135deg, #FF6B35, #FF8F65); color: white; }
-    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary { background: rgba(0, 217, 255, 0.1); border: 1px solid #00D9FF; color: #00D9FF; }
-    .btn-secondary:hover { background: rgba(0, 217, 255, 0.2); }
-    .trending { background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-    .trending h2 { font-size: 1.25rem; color: #00D9FF; margin-bottom: 1rem; }
-    .trending-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .topic-tag { padding: 0.5rem 1rem; background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 20px; font-size: 0.875rem; color: #00D9FF; }
-    .posts-grid { display: grid; gap: 1.5rem; }
-    .post-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem; transition: all 0.3s; }
-    .post-card:hover { border-color: #FF6B35; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255, 107, 53, 0.2); }
-    .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
-    .post-category { padding: 0.35rem 0.875rem; background: #FF6B35; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .post-time { font-size: 0.875rem; color: #888; font-family: 'Courier New', monospace; }
-    .post-content { font-size: 1rem; line-height: 1.8; color: #ddd; margin-bottom: 1rem; white-space: pre-wrap; word-wrap: break-word; }
-    .post-actions { display: flex; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-    .copy-btn { flex: 1; padding: 0.75rem; background: rgba(0, 217, 255, 0.1); border: 1px solid #00D9FF; border-radius: 6px; color: #00D9FF; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-    .copy-btn:hover { background: #00D9FF; color: #0A0A0A; }
-    .copy-btn.copied { background: #4ADE80; border-color: #4ADE80; color: #0A0A0A; }
-    .regenerate-btn { padding: 0.75rem 1.5rem; background: rgba(255, 107, 53, 0.1); border: 1px solid #FF6B35; border-radius: 6px; color: #FF6B35; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-    .regenerate-btn:hover:not(:disabled) { background: #FF6B35; color: white; }
-    .regenerate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .loading { text-align: center; padding: 3rem; }
-    .spinner { width: 50px; height: 50px; margin: 0 auto 1rem; border: 3px solid rgba(255, 107, 53, 0.1); border-top-color: #FF6B35; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card { background: rgba(255, 107, 53, 0.05); border: 1px solid rgba(255, 107, 53, 0.2); border-radius: 8px; padding: 1rem; text-align: center; }
-    .stat-value { font-size: 2rem; font-weight: 900; color: #FF6B35; font-family: 'Courier New', monospace; }
-    .stat-label { font-size: 0.875rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.25rem; }
-    .success-banner { background: rgba(74, 222, 128, 0.1); border: 1px solid #4ADE80; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; color: #4ADE80; }
-    .error-banner { background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; color: #EF4444; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0A0A0A 0%, #1a1a1a 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: rgba(255, 107, 53, 0.1);
+      border: 2px solid #FF6B35;
+      border-radius: 16px;
+    }
+    
+    .header h1 {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #FF6B35, #00D9FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .header p {
+      color: rgba(255,255,255,0.7);
+      font-size: 16px;
+    }
+    
+    .api-input {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 30px;
+    }
+    
+    .api-input input {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .api-input input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+    
+    .generate-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #FF6B35, #ff8555);
+      border: none;
+      border-radius: 12px;
+      padding: 18px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 30px;
+      transition: transform 0.2s;
+    }
+    
+    .generate-btn:hover {
+      transform: scale(1.02);
+    }
+    
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .posts-container {
+      display: grid;
+      gap: 20px;
+    }
+    
+    .post-card {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+    
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .category-badge {
+      background: rgba(0, 217, 255, 0.2);
+      color: #00D9FF;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .post-content {
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.9);
+    }
+    
+    .flyer-preview {
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    
+    .flyer-preview img {
+      width: 100%;
+      display: block;
+    }
+    
+    .post-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .copy-btn, .download-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .copy-btn {
+      background: rgba(0, 217, 255, 0.2);
+      color: #00D9FF;
+    }
+    
+    .download-btn {
+      background: rgba(255, 107, 53, 0.2);
+      color: #FF6B35;
+    }
+    
+    .copy-btn:hover, .download-btn:hover {
+      transform: scale(1.02);
+    }
+    
+    .error {
+      background: rgba(255, 0, 0, 0.1);
+      border: 2px solid #ff0000;
+      border-radius: 12px;
+      padding: 16px;
+      color: #ff6b6b;
+      margin-bottom: 20px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.6);
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+      
+      .post-card {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+  <div class="container">
+    <div class="header">
+      <h1>@FURQS7</h1>
+      <p>AI-Powered Content Engine with Auto-Flyer Generation</p>
+    </div>
+    
+    <div class="api-input">
+      <input 
+        type="password" 
+        id="apiKey" 
+        placeholder="Enter your Anthropic API key (sk-ant-api03-...)"
+        value=""
+      />
+    </div>
+    
+    <button class="generate-btn" id="generateBtn" onclick="generatePosts()">
+      🔄 Generate New Posts with Flyers
+    </button>
+    
+    <div id="error"></div>
+    <div id="posts"></div>
+  </div>
 
-    function App() {
-      const [posts, setPosts] = useState([]);
-      const [loading, setLoading] = useState(false);
-      const [apiKey, setApiKey] = useState(localStorage.getItem('anthropic_api_key') || '');
-      const [error, setError] = useState('');
-      const [success, setSuccess] = useState('');
-      const [trending] = useState(['AI Agents', 'Crypto Regulation', 'Stablecoin Payments', 'A16z Portfolio', 'Dubai Tech', 'Founder Wellness', 'Real-World Crypto', 'DeFi 2.0']);
-
-      const categories = ['A16z Scout Bait','Stablecoins/Kliqfi','Crypto Rage Bait','AI Insights','Dubai Lifestyle','Personal/Relatable'];
-      const topics = {
-        'A16z Scout Bait': ['scaling strategies', 'market timing', 'founder insights', 'Dubai tech ecosystem'],
-        'Stablecoins/Kliqfi': ['payment infrastructure', 'real-world adoption', 'regulatory clarity', 'merchant solutions'],
-        'Crypto Rage Bait': ['Bitcoin maxis', 'VC tokens', 'crypto narratives', 'DeFi drama'],
-        'AI Insights': ['AI agents', 'Claude Mythos 5', 'enterprise AI', 'AI + crypto'],
-        'Dubai Lifestyle': ['morning routine', 'DIFC', 'UAE opportunities', 'MENA founders'],
-        'Personal/Relatable': ['meditation', 'founder burnout', 'work-life balance', 'personal growth']
-      };
-
-      const postingSchedule = [
-        {time: '08:00 GST', zones: 'UAE Morning + Europe Early', priority: 'Medium'},
-        {time: '12:00 GST', zones: 'UAE Lunch + Europe Peak + US East AM', priority: 'Very High'},
-        {time: '16:00 GST', zones: 'UAE PM + Europe End + US East Lunch', priority: 'High'},
-        {time: '20:00 GST', zones: 'UAE Evening + US East PM + US West Lunch', priority: 'Very High'},
-        {time: '23:00 GST', zones: 'UAE Late + US Peak + China Morning', priority: 'High'}
-      ];
-
-      // Save API key to localStorage
-      useEffect(() => {
-        if (apiKey) {
-          localStorage.setItem('anthropic_api_key', apiKey);
-        }
-      }, [apiKey]);
-
-      const generatePosts = async () => {
-        if (!apiKey || apiKey.trim() === '') {
-          setError('Please enter your Anthropic API key');
-          return;
-        }
-
-        setLoading(true);
-        setError('');
-        setSuccess('');
-        const newPosts = [];
-
-        try {
-          for (let i = 0; i < 5; i++) {
-            const category = categories[i % categories.length];
-            const categoryTopics = topics[category];
-            const topic = categoryTopics[Math.floor(Math.random() * categoryTopics.length)];
-            
-            const content = await generateSinglePost(category, topic);
-            newPosts.push({
-              id: Date.now() + i,
-              category,
-              time: postingSchedule[i].time,
-              content,
-              topic
-            });
-          }
-
-          setPosts(newPosts);
-          setSuccess('✅ Generated 5 AI-powered posts successfully!');
-          setTimeout(() => setSuccess(''), 5000);
-        } catch (err) {
-          setError(`❌ Error: ${err.message}`);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const generateSinglePost = async (category, topic) => {
-        try {
-          // Call our Netlify Function instead of Anthropic API directly
+  <script>
+    // Load API key from localStorage
+    const savedKey = localStorage.getItem('anthropicApiKey');
+    if (savedKey) {
+      document.getElementById('apiKey').value = savedKey;
+    }
+    
+    // Save API key to localStorage when changed
+    document.getElementById('apiKey').addEventListener('change', (e) => {
+      localStorage.setItem('anthropicApiKey', e.target.value);
+    });
+    
+    const categories = [
+      { name: 'A16z Scout Bait', topic: 'scaling strategies' },
+      { name: 'Stablecoins/Kliqfi', topic: 'real-world payments' },
+      { name: 'Crypto Rage Bait', topic: 'exit liquidity farmers' },
+      { name: 'AI Insights', topic: 'production AI systems' },
+      { name: 'Dubai Lifestyle', topic: 'founder morning routine' }
+    ];
+    
+    async function generatePosts() {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const errorDiv = document.getElementById('error');
+      const postsDiv = document.getElementById('posts');
+      const btn = document.getElementById('generateBtn');
+      
+      errorDiv.innerHTML = '';
+      
+      if (!apiKey) {
+        errorDiv.innerHTML = '<div class="error">Please enter your API key first</div>';
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      postsDiv.innerHTML = '<div class="loading">Generating 5 posts with flyers...</div>';
+      
+      try {
+        const posts = [];
+        
+        for (const cat of categories) {
           const response = await fetch('/.netlify/functions/generate-post', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              category,
-              topic,
-              apiKey
+              category: cat.name,
+              topic: cat.topic,
+              apiKey: apiKey
             })
           });
-
+          
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to generate post');
+            throw new Error(errorData.error || `Failed to generate ${cat.name} post`);
           }
-
+          
           const data = await response.json();
-          return data.content;
-        } catch (error) {
-          console.error('Error generating post:', error);
-          throw error;
+          posts.push(data);
         }
-      };
-
-      const copyToClipboard = async (content) => {
-        try {
-          await navigator.clipboard.writeText(content);
-          return true;
-        } catch (err) {
-          console.error(err);
-          return false;
-        }
-      };
-
-      const regenerateSinglePost = async (index) => {
-        const post = posts[index];
-        setError('');
         
-        try {
-          const newContent = await generateSinglePost(post.category, post.topic);
-          const newPosts = [...posts];
-          newPosts[index] = { ...post, content: newContent, id: Date.now() };
-          setPosts(newPosts);
-        } catch (err) {
-          setError(`❌ Failed to regenerate: ${err.message}`);
-        }
-      };
-
-      return (
-        <div className="app">
-          <div className="header">
-            <h1>@FURQS7 CONTENT ENGINE</h1>
-            <p>AI-Powered Daily Posts • Backend-Powered • No CORS Issues</p>
-          </div>
-
-          {success && <div className="success-banner">{success}</div>}
-          {error && <div className="error-banner">{error}</div>}
-
-          <div className="api-setup">
-            <h3>🔑 Anthropic API Key</h3>
-            <input 
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-ant-api03-..."
-            />
-            <small>Stored in your browser only. Calls are made through our secure backend.</small>
-          </div>
-
-          <div className="stats">
-            <div className="stat-card">
-              <div className="stat-value">{posts.length}</div>
-              <div className="stat-label">Posts Generated</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">GST</div>
-              <div className="stat-label">Timezone</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">✅</div>
-              <div className="stat-label">Backend Active</div>
-            </div>
-          </div>
-
-          <div className="controls">
-            <button className="btn btn-primary" onClick={generatePosts} disabled={loading}>
-              {loading ? '⏳ Generating...' : '🔄 Generate New Posts'}
-            </button>
-          </div>
-
-          <div className="trending">
-            <h2>🔥 Trending Topics</h2>
-            <div className="trending-grid">
-              {trending.map((t, i) => <span key={i} className="topic-tag">#{t.replace(/\s/g, '')}</span>)}
-            </div>
-          </div>
-
-          <div className="posts-grid">
-            {loading ? (
-              <div className="loading">
-                <div className="spinner"></div>
-                <p>Generating your daily content with Claude AI...</p>
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="loading">
-                <p>Click "Generate New Posts" to create your daily content!</p>
-              </div>
-            ) : (
-              posts.map((post, i) => (
-                <PostCard 
-                  key={post.id}
-                  post={post}
-                  index={i}
-                  onCopy={copyToClipboard}
-                  onRegenerate={regenerateSinglePost}
-                />
-              ))
-            )}
-          </div>
-        </div>
-      );
+        displayPosts(posts);
+        
+      } catch (error) {
+        errorDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        postsDiv.innerHTML = '';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Generate New Posts with Flyers';
+      }
     }
-
-    function PostCard({ post, index, onCopy, onRegenerate }) {
-      const [copied, setCopied] = useState(false);
-      const [regenerating, setRegenerating] = useState(false);
-
-      const handleCopy = async () => {
-        const success = await onCopy(post.content);
-        if (success) {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }
-      };
-
-      const handleRegenerate = async () => {
-        setRegenerating(true);
-        await onRegenerate(index);
-        setRegenerating(false);
-      };
-
-      return (
-        <div className="post-card">
-          <div className="post-header">
-            <span className="post-category">{post.category}</span>
-            <span className="post-time">📍 {post.time}</span>
+    
+    function displayPosts(posts) {
+      const postsDiv = document.getElementById('posts');
+      postsDiv.innerHTML = posts.map((post, index) => `
+        <div class="post-card">
+          <div class="post-header">
+            <div class="category-badge">${post.category}</div>
           </div>
-          <div className="post-content">{post.content}</div>
-          <div className="post-actions">
-            <button className={`copy-btn ${copied ? 'copied' : ''}`} onClick={handleCopy}>
-              {copied ? '✅ Copied!' : '📋 Copy to Clipboard'}
+          
+          <div class="post-content">${escapeHtml(post.content)}</div>
+          
+          <div class="flyer-preview">
+            <img src="data:image/svg+xml;base64,${btoa(post.flyer)}" alt="${post.category} flyer" id="flyer-${index}"/>
+          </div>
+          
+          <div class="post-actions">
+            <button class="copy-btn" onclick="copyPost(\`${escapeForJs(post.content)}\`)">
+              📋 Copy Post
             </button>
-            <button className="regenerate-btn" onClick={handleRegenerate} disabled={regenerating}>
-              {regenerating ? '⏳ ...' : '♻️ Regenerate'}
+            <button class="download-btn" onclick="downloadFlyer(${index}, '${escapeForJs(post.category)}')">
+              ⬇️ Download Flyer
             </button>
           </div>
         </div>
-      );
+      `).join('');
     }
-
-    ReactDOM.render(<App />, document.getElementById('root'));
+    
+    function copyPost(text) {
+      navigator.clipboard.writeText(text);
+      alert('✅ Post copied to clipboard!');
+    }
+    
+    function downloadFlyer(index, category) {
+      const img = document.getElementById(`flyer-${index}`);
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1080;
+      const ctx = canvas.getContext('2d');
+      
+      const tempImg = new Image();
+      tempImg.onload = function() {
+        ctx.drawImage(tempImg, 0, 0);
+        canvas.toBlob(function(blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `furqs7-${category.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+      };
+      tempImg.src = img.src;
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function escapeForJs(text) {
+      return text.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    }
   </script>
 </body>
 </html>
