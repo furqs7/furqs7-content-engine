@@ -1,6 +1,4 @@
 exports.handler = async (event, context) => {
-  console.log('Function called!');
-  
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -29,11 +27,9 @@ exports.handler = async (event, context) => {
       'Personal/Relatable': `Relatable ${topic} founder post. Struggles, wellness. Vulnerable but strong.`
     };
 
-    console.log('Calling Anthropic API for:', category);
-    
     const https = require('https');
     const postData = JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',  // ← CHANGED THIS LINE
+      model: 'claude-3-5-sonnet-20240620',  // ← OLDER STABLE MODEL
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompts[category] || `Write about ${topic}` }]
     });
@@ -68,8 +64,6 @@ exports.handler = async (event, context) => {
       req.write(postData);
       req.end();
     });
-
-    console.log('Success! Generated post');
 
     return {
       statusCode: 200,
