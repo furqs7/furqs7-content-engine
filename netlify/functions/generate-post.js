@@ -65,13 +65,19 @@ exports.handler = async (event, context) => {
       req.end();
     });
 
+    const postContent = apiResponse.content[0].text;
+    
+    // Generate minimal flyer SVG
+    const flyer = generateFlyer(category, postContent);
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ 
-        content: apiResponse.content[0].text, 
+        content: postContent, 
         category, 
-        topic 
+        topic,
+        flyer: flyer
       })
     };
 
@@ -85,3 +91,48 @@ exports.handler = async (event, context) => {
     };
   }
 };
+
+function generateFlyer(category, postText) {
+  // Extract key number or phrase from post
+  const numberMatch = postText.match(/\d+%|\$\d+[BMK]?|\d+x|\d+\/\d+/);
+  const mainNumber = numberMatch ? numberMatch[0] : extractKeyPhrase(postText);
+  const subtitle = extractSubtitle(postText, mainNumber);
+
+  // Simple, clean flyer - just number + subtitle
+  return `<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1080" height="1080" fill="#000000"/>
+    
+    <g transform="translate(540, 540)">
+      
+      <text x="0" y="-80" font-family="Arial, sans-serif" font-size="160" font-weight="900" fill="#FF6B35" text-anchor="middle" dominant-baseline="middle">${escapeXml(mainNumber)}</text>
+      
+      <line x1="-250" y1="40" x2="250" y2="40" stroke="#00D9FF" stroke-width="4"/>
+      
+      <text x="0" y="140" font-family="Arial, sans-serif" font-size="36" fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle">${escapeXml(subtitle)}</text>
+      
+    </g>
+  </svg>`;
+}
+
+function extractKeyPhrase(text) {
+  const words = text.split(' ').filter(w => w.length > 3);
+  if (words.length > 0) {
+    return words[0].substring(0, 15).toUpperCase();
+  }
+  return 'INSIGHT';
+}
+
+function extractSubtitle(text, mainNumber) {
+  const cleaned = text.replace(mainNumber, '').trim();
+  const words = cleaned.split(' ').slice(0, 5).join(' ');
+  return words.length > 50 ? words.substring(0, 47) + '...' : words;
+}
+
+function escapeXml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
