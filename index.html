@@ -218,13 +218,11 @@
   </div>
 
   <script>
-    // Load API key from localStorage
     const savedKey = localStorage.getItem('anthropicApiKey');
     if (savedKey) {
       document.getElementById('apiKey').value = savedKey;
     }
     
-    // Save API key to localStorage when changed
     document.getElementById('apiKey').addEventListener('change', (e) => {
       localStorage.setItem('anthropicApiKey', e.target.value);
     });
@@ -290,28 +288,32 @@
     
     function displayPosts(posts) {
       const postsDiv = document.getElementById('posts');
-      postsDiv.innerHTML = posts.map((post, index) => `
-        <div class="post-card">
-          <div class="post-header">
-            <div class="category-badge">${post.category}</div>
+      postsDiv.innerHTML = posts.map((post, index) => {
+        const svgDataUrl = 'data:image/svg+xml,' + encodeURIComponent(post.flyer);
+        
+        return `
+          <div class="post-card">
+            <div class="post-header">
+              <div class="category-badge">${post.category}</div>
+            </div>
+            
+            <div class="post-content">${escapeHtml(post.content)}</div>
+            
+            <div class="flyer-preview">
+              <img src="${svgDataUrl}" alt="${post.category} flyer" id="flyer-${index}"/>
+            </div>
+            
+            <div class="post-actions">
+              <button class="copy-btn" onclick="copyPost(\`${escapeForJs(post.content)}\`)">
+                📋 Copy Post
+              </button>
+              <button class="download-btn" onclick="downloadFlyer(${index}, '${escapeForJs(post.category)}')">
+                ⬇️ Download Flyer
+              </button>
+            </div>
           </div>
-          
-          <div class="post-content">${escapeHtml(post.content)}</div>
-          
-          <div class="flyer-preview">
-            <img src="data:image/svg+xml;base64,${btoa(post.flyer)}" alt="${post.category} flyer" id="flyer-${index}"/>
-          </div>
-          
-          <div class="post-actions">
-            <button class="copy-btn" onclick="copyPost(\`${escapeForJs(post.content)}\`)">
-              📋 Copy Post
-            </button>
-            <button class="download-btn" onclick="downloadFlyer(${index}, '${escapeForJs(post.category)}')">
-              ⬇️ Download Flyer
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
     
     function copyPost(text) {
