@@ -1,7 +1,5 @@
 exports.handler = async (event, context) => {
-  // Add detailed logging
   console.log('Function called!');
-  console.log('Method:', event.httpMethod);
   
   if (event.httpMethod !== 'POST') {
     return {
@@ -12,13 +10,9 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const body = JSON.parse(event.body);
-    console.log('Request body:', { category: body.category, topic: body.topic, hasApiKey: !!body.apiKey });
-    
-    const { category, topic, apiKey } = body;
+    const { category, topic, apiKey } = JSON.parse(event.body);
     
     if (!apiKey) {
-      console.log('No API key provided');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -27,19 +21,19 @@ exports.handler = async (event, context) => {
     }
 
     const prompts = {
-      'A16z Scout Bait': `Write a short X post (max 280 chars) from @Furqs7 about ${topic}. Dubai founder. Attract A16z scouts. Conversational, edgy. End with question.`,
-      'Stablecoins/Kliqfi': `X post about ${topic} promoting Kliqfi. Real business needs. Contrarian.`,
-      'Crypto Rage Bait': `Controversial ${topic} take. Provocative. 2-3 sentences.`,
-      'AI Insights': `X post about ${topic}. Hands-on credibility. Implications for builders.`,
-      'Dubai Lifestyle': `${topic} Dubai founder post. Morning routines. Authentic.`,
-      'Personal/Relatable': `Relatable ${topic} founder post. Vulnerable but strong.`
+      'A16z Scout Bait': `Write a short X post (max 280 chars) from @Furqs7 about ${topic}. Dubai founder, 8+ yrs fintech/crypto. Mix Elon's contrarian energy + Zack's receipts + Raj's storytelling. Attract A16z scouts. Conversational, edgy, smart. End with question.`,
+      'Stablecoins/Kliqfi': `X post about ${topic} promoting Kliqfi real-world crypto payments. Real business needs: instant settlement, low fees. Contrarian, anti-hype.`,
+      'Crypto Rage Bait': `Controversial ${topic} take for crypto Twitter. No BS, calls out LARPers. Provocative. End with engagement hook. 2-3 sentences.`,
+      'AI Insights': `X post about ${topic}. Hands-on credibility with AI. One non-obvious insight. Implications for builders.`,
+      'Dubai Lifestyle': `${topic} post showing Dubai founder lifestyle. Morning routines, MENA ecosystem. Aspirational but authentic.`,
+      'Personal/Relatable': `Relatable ${topic} founder post. Struggles, wellness. Vulnerable but strong.`
     };
 
-    console.log('Calling Anthropic API...');
+    console.log('Calling Anthropic API for:', category);
     
     const https = require('https');
     const postData = JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',  // ← CHANGED THIS LINE
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompts[category] || `Write about ${topic}` }]
     });
@@ -60,33 +54,22 @@ exports.handler = async (event, context) => {
 
       const req = https.request(options, (res) => {
         let data = '';
-        console.log('API Response status:', res.statusCode);
-        
         res.on('data', (chunk) => { data += chunk; });
         res.on('end', () => {
-          console.log('API Response:', data.substring(0, 200));
           if (res.statusCode === 200) {
-            try {
-              resolve(JSON.parse(data));
-            } catch (e) {
-              reject(new Error('Failed to parse API response: ' + e.message));
-            }
+            resolve(JSON.parse(data));
           } else {
             reject(new Error(`API returned ${res.statusCode}: ${data}`));
           }
         });
       });
 
-      req.on('error', (e) => {
-        console.error('Request error:', e);
-        reject(e);
-      });
-
+      req.on('error', reject);
       req.write(postData);
       req.end();
     });
 
-    console.log('Successfully got API response');
+    console.log('Success! Generated post');
 
     return {
       statusCode: 200,
@@ -99,16 +82,13 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Function error:', error);
-    console.error('Error stack:', error.stack);
-    
+    console.error('Error:', error.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ 
         error: 'Internal error',
-        message: error.message,
-        details: error.toString()
+        message: error.message
       })
     };
   }
