@@ -1,4 +1,8 @@
 exports.handler = async (event, context) => {
+  // Add detailed logging
+  console.log('Function called!');
+  console.log('Method:', event.httpMethod);
+  
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -8,8 +12,13 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { category, topic, apiKey } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    console.log('Request body:', { category: body.category, topic: body.topic, hasApiKey: !!body.apiKey });
+    
+    const { category, topic, apiKey } = body;
+    
     if (!apiKey) {
+      console.log('No API key provided');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -17,63 +26,90 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const contentPrompts = {
-      'A16z Scout Bait': `Write a short X post (max 280 chars) from @Furqs7 about ${topic}. Dubai founder, 8+ yrs fintech/crypto. Mix Elon's energy + Zack's receipts + Raj's storytelling. Attract A16z scouts. Conversational, edgy, smart. End with question.`,
-      'Stablecoins/Kliqfi': `X post about ${topic} promoting Kliqfi payments. Real business needs: instant settlement, low fees. Contrarian, anti-hype.`,
-      'Crypto Rage Bait': `Controversial ${topic} take. No BS, calls out LARPers. Provocative. End with engagement hook. 2-3 sentences.`,
-      'AI Insights': `X post about ${topic}. Hands-on credibility. One non-obvious insight. Implications for builders.`,
-      'Dubai Lifestyle': `${topic} post showing Dubai founder life. Morning routines, MENA ecosystem. Aspirational but authentic.`,
-      'Personal/Relatable': `Relatable ${topic} post. Founder struggles, wellness. Vulnerable but strong.`
+    const prompts = {
+      'A16z Scout Bait': `Write a short X post (max 280 chars) from @Furqs7 about ${topic}. Dubai founder. Attract A16z scouts. Conversational, edgy. End with question.`,
+      'Stablecoins/Kliqfi': `X post about ${topic} promoting Kliqfi. Real business needs. Contrarian.`,
+      'Crypto Rage Bait': `Controversial ${topic} take. Provocative. 2-3 sentences.`,
+      'AI Insights': `X post about ${topic}. Hands-on credibility. Implications for builders.`,
+      'Dubai Lifestyle': `${topic} Dubai founder post. Morning routines. Authentic.`,
+      'Personal/Relatable': `Relatable ${topic} founder post. Vulnerable but strong.`
     };
 
+    console.log('Calling Anthropic API...');
+    
     const https = require('https');
     const postData = JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
-      messages: [{ role: 'user', content: contentPrompts[category] || `Write about ${topic} for ${category}` }]
+      messages: [{ role: 'user', content: prompts[category] || `Write about ${topic}` }]
     });
 
-    const options = {
-      hostname: 'api.anthropic.com',
-      port: 443,
-      path: '/v1/messages',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Length': Buffer.byteLength(postData)
-      }
-    };
-
     const apiResponse = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.anthropic.com',
+        port: 443,
+        path: '/v1/messages',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+
       const req = https.request(options, (res) => {
         let data = '';
+        console.log('API Response status:', res.statusCode);
+        
         res.on('data', (chunk) => { data += chunk; });
         res.on('end', () => {
+          console.log('API Response:', data.substring(0, 200));
           if (res.statusCode === 200) {
-            resolve(JSON.parse(data));
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error('Failed to parse API response: ' + e.message));
+            }
           } else {
-            reject(new Error(`API error ${res.statusCode}: ${data}`));
+            reject(new Error(`API returned ${res.statusCode}: ${data}`));
           }
         });
       });
-      req.on('error', reject);
+
+      req.on('error', (e) => {
+        console.error('Request error:', e);
+        reject(e);
+      });
+
       req.write(postData);
       req.end();
     });
 
+    console.log('Successfully got API response');
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ content: apiResponse.content[0].text, category, topic })
+      body: JSON.stringify({ 
+        content: apiResponse.content[0].text, 
+        category, 
+        topic 
+      })
     };
 
   } catch (error) {
+    console.error('Function error:', error);
+    console.error('Error stack:', error.stack);
+    
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Internal error', message: error.message })
+      body: JSON.stringify({ 
+        error: 'Internal error',
+        message: error.message,
+        details: error.toString()
+      })
     };
   }
 };
