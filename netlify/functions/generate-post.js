@@ -29,7 +29,7 @@ exports.handler = async (event, context) => {
 
     const https = require('https');
     const postData = JSON.stringify({
-      model: 'claude-3-5-sonnet-20240620',  // ← OLDER STABLE MODEL
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompts[category] || `Write about ${topic}` }]
     });
@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
           if (res.statusCode === 200) {
             resolve(JSON.parse(data));
           } else {
-            reject(new Error(`API returned ${res.statusCode}: ${data}`));
+            reject(new Error(`API ${res.statusCode}: ${data}`));
           }
         });
       });
@@ -76,13 +76,11 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Error:', error.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ 
-        error: 'Internal error',
-        message: error.message
+        error: error.message
       })
     };
   }
